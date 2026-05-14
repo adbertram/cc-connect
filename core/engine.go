@@ -1011,6 +1011,15 @@ func (e *Engine) ExecuteCronJob(job *CronJob) error {
 		Extra:      map[string]any{"job_id": job.ID, "job_description": job.Description},
 	})
 
+	// Session-independent shell job: no session, no platform, no reply
+	// context. Just run the command on schedule. Used by install-time
+	// scheduled tasks (e.g. periodic mailbox poll) that have no AI
+	// conversation to attach to. We use a noop platform so executeCronShell's
+	// notification calls become harmless no-ops.
+	if job.IsShellJob() && job.SessionKey == "" {
+		return e.executeCronShell(noopPlatform{}, nil, job)
+	}
+
 	sessionKey := job.SessionKey
 	platformName := ""
 	if idx := strings.Index(sessionKey, ":"); idx > 0 {

@@ -678,6 +678,18 @@ type mutePlatform struct {
 func (m *mutePlatform) Reply(_ context.Context, _ any, _ string) error { return nil }
 func (m *mutePlatform) Send(_ context.Context, _ any, _ string) error  { return nil }
 
+// noopPlatform is a fully synthetic Platform used by session-independent shell
+// cron jobs (Exec + no session_key). It satisfies the Platform interface with
+// all-nil/no-op methods so executeCronShell can run end-to-end without a real
+// platform attached.
+type noopPlatform struct{}
+
+func (noopPlatform) Name() string                                       { return "noop" }
+func (noopPlatform) Start(_ MessageHandler) error                       { return nil }
+func (noopPlatform) Reply(_ context.Context, _ any, _ string) error     { return nil }
+func (noopPlatform) Send(_ context.Context, _ any, _ string) error      { return nil }
+func (noopPlatform) Stop() error                                        { return nil }
+
 func GenerateCronID() string {
 	b := make([]byte, 4)
 	if _, err := rand.Read(b); err != nil {

@@ -264,7 +264,12 @@ func (s *APIServer) handleCronAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Resolve session_key: use provided, or auto-detect from active sessions
+	// Resolve session_key: use provided, or auto-detect from active sessions.
+	// Shell jobs (Exec) are session-independent — they run a command on a
+	// schedule and have no AI conversation to attach to. For shell jobs
+	// session_key is optional; if empty, no platform notification is posted.
+	// Prompt jobs always need a session_key (they send a prompt into an AI
+	// session).
 	sessionKey := req.SessionKey
 	if sessionKey == "" {
 		s.mu.RLock()
@@ -278,8 +283,8 @@ func (s *APIServer) handleCronAdd(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if sessionKey == "" {
-		http.Error(w, "session_key is required: set CC_SESSION_KEY env, pass --session-key, or ensure exactly one active session exists", http.StatusBadRequest)
+	if sessionKey == "" && req.Exec == "" {
+		http.Error(w, "session_key is required for prompt jobs: set CC_SESSION_KEY env, pass --session-key, or ensure exactly one active session exists", http.StatusBadRequest)
 		return
 	}
 
