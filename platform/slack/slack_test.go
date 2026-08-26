@@ -41,6 +41,47 @@ func TestStripAppMentionText(t *testing.T) {
 	}
 }
 
+func TestSlackThreadRootUsesExistingThreadWhenPresent(t *testing.T) {
+	got := slackThreadRoot("1778783426.143329", "1778783000.000100")
+	if got != "1778783000.000100" {
+		t.Fatalf("slackThreadRoot() = %q, want thread ts", got)
+	}
+}
+
+func TestSlackThreadRootFallsBackToMessageTimestamp(t *testing.T) {
+	got := slackThreadRoot("1778783426.143329", "")
+	if got != "1778783426.143329" {
+		t.Fatalf("slackThreadRoot() = %q, want message ts", got)
+	}
+}
+
+func TestSlackSessionKeyIncludesThreadRootWhenThreadIsolationEnabled(t *testing.T) {
+	p := &Platform{threadIsolation: true}
+	got := p.sessionKey("D0B1PM21YDD", "U0F2BD3QS", "1778783426.143329")
+	want := "slack:D0B1PM21YDD:1778783426.143329:U0F2BD3QS"
+	if got != want {
+		t.Fatalf("sessionKey() = %q, want %q", got, want)
+	}
+}
+
+func TestSlackSessionKeyKeepsLegacyShapeWhenThreadIsolationDisabled(t *testing.T) {
+	p := &Platform{threadIsolation: false}
+	got := p.sessionKey("D0B1PM21YDD", "U0F2BD3QS", "1778783426.143329")
+	want := "slack:D0B1PM21YDD:U0F2BD3QS"
+	if got != want {
+		t.Fatalf("sessionKey() = %q, want %q", got, want)
+	}
+}
+
+func TestSlackSessionKeyCanShareThreadInChannel(t *testing.T) {
+	p := &Platform{threadIsolation: true, shareSessionInChannel: true}
+	got := p.sessionKey("C123", "U456", "1778783426.143329")
+	want := "slack:C123:1778783426.143329"
+	if got != want {
+		t.Fatalf("sessionKey() = %q, want %q", got, want)
+	}
+}
+
 func TestDownloadSlackFile_HTMLDetection(t *testing.T) {
 	// Test that we detect HTML responses (Slack login page) and return an error
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

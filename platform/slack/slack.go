@@ -34,6 +34,7 @@ type Platform struct {
 	appToken              string
 	allowFrom             string
 	shareSessionInChannel bool
+	threadIsolation       bool
 	client                *slack.Client
 	socket                *socketmode.Client
 	handler               core.MessageHandler
@@ -49,6 +50,7 @@ func New(opts map[string]any) (core.Platform, error) {
 	allowFrom, _ := opts["allow_from"].(string)
 	core.CheckAllowFrom("slack", allowFrom)
 	shareSessionInChannel, _ := opts["share_session_in_channel"].(bool)
+	threadIsolation, _ := opts["thread_isolation"].(bool)
 	if botToken == "" || appToken == "" {
 		return nil, fmt.Errorf("slack: bot_token and app_token are required")
 	}
@@ -57,6 +59,7 @@ func New(opts map[string]any) (core.Platform, error) {
 		appToken:              appToken,
 		allowFrom:             allowFrom,
 		shareSessionInChannel: shareSessionInChannel,
+		threadIsolation:       threadIsolation,
 		channelNameCache:      make(map[string]string),
 	}, nil
 }
@@ -134,12 +137,7 @@ func (p *Platform) handleEvent(evt socketmode.Event) {
 					return
 				}
 
-				var sessionKey string
-				if p.shareSessionInChannel {
-					sessionKey = fmt.Sprintf("slack:%s", ev.Channel)
-				} else {
-					sessionKey = fmt.Sprintf("slack:%s:%s", ev.Channel, ev.User)
-				}
+				sessionKey := p.sessionKey(ev.Channel, ev.User, slackThreadRoot(ev.TimeStamp, ev.ThreadTimeStamp))
 
 				var shareFiles []slackevents.File
 				if cb, ok := data.Data.(*slackevents.EventsAPICallbackEvent); ok {
@@ -200,12 +198,7 @@ func (p *Platform) handleEvent(evt socketmode.Event) {
 					return
 				}
 
-				var sessionKey string
-				if p.shareSessionInChannel {
-					sessionKey = fmt.Sprintf("slack:%s", ev.Channel)
-				} else {
-					sessionKey = fmt.Sprintf("slack:%s:%s", ev.Channel, ev.User)
-				}
+				sessionKey := p.sessionKey(ev.Channel, ev.User, slackThreadRoot(ev.TimeStamp, ev.ThreadTimeStamp))
 				ts := ev.TimeStamp
 
 				images, audio, docFiles := p.processSlackFileShares(ev.Files)
@@ -366,6 +359,25 @@ func slackFileDisplayName(f slackevents.File) string {
 	return f.Title
 }
 
+func slackThreadRoot(messageTS, threadTS string) string {
+	if threadTS != "" {
+		return threadTS
+	}
+	return messageTS
+}
+
+func (p *Platform) sessionKey(channel, user, threadRoot string) string {
+	if p.threadIsolation && threadRoot != "" {
+		if p.shareSessionInChannel {
+			return fmt.Sprintf("slack:%s:%s", channel, threadRoot)
+		}
+		return fmt.Sprintf("slack:%s:%s:%s", channel, threadRoot, user)
+	}
+	if p.shareSessionInChannel {
+		return fmt.Sprintf("slack:%s", channel)
+	}
+	return fmt.Sprintf("slack:%s:%s", channel, user)
+}
 
 // assistantOrThreadTS returns the thread_ts to use for the bot's reply.
 //
