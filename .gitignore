@@ -1,20 +1,14 @@
 # ============================================================================
-# Binary outputs
-# ============================================================================
 /cc-connect
 cc-connect.bak-*
 *.exe
 *.exe~
 *.dll
-*.so
 *.dylib
 *.test
 *.out
 *.old
 
-# ============================================================================
-# Go workspace & tooling
-# ============================================================================
 # Test binary, built with `go test -c`
 *.test
 
@@ -33,14 +27,10 @@ go.env
 # Dependency directories
 vendor/
 
-# ============================================================================
-# Project-specific
-# ============================================================================
 # Runtime configuration (contains secrets)
 config.toml
 config.*.toml
 !config.example.toml
-.env
 *.local.toml
 
 # Instance lock files (created at startup, released on shutdown)
@@ -52,14 +42,9 @@ config.*.toml
 # npm / pnpm (for npm package distribution and web admin)
 .npmrc
 package-lock.json
-node_modules/
 .vite/
 
 # ============================================================================
-# Build & distribution
-# ============================================================================
-dist/
-build/
 bin/
 release/
 # Keep web/dist directory (for embedded admin UI) but ignore build artifacts
@@ -67,24 +52,13 @@ web/dist/*
 !web/dist/.keep
 
 # ============================================================================
-# Testing & temporary files
-# ============================================================================
 test/
 scripts/
 tmp/
 temp/
-*.tmp
-*.swp
-*.swo
-*~
 *.pid
-*.log
 
 # ============================================================================
-# IDE & Editor
-# ============================================================================
-.vscode/
-.idea/
 *.iml
 *.ipr
 *.iws
@@ -95,43 +69,28 @@ temp/
 *.sln.docstates
 
 # Emacs
-*~
 \#*\#
 .\#*
 
 # Vim
-*.swp
-*.swo
 *.swn
 
 # macOS
-.DS_Store
 .AppleDouble
 .LSOverride
 
-# ============================================================================
-# Documentation (drafts)
 # ============================================================================
 RELEASE.md
 DRAFTS.md
 NOTES.md
 
-# ============================================================================
-# System
-# ============================================================================
 # Thumbs.db on Windows
-Thumbs.db
 ehthumbs.db
 Desktop.ini
 
 # ============================================================================
-# AI agent planning artifacts
-# ============================================================================
 .planning/
 
-# ============================================================================
-# Security
-# ============================================================================
 # Never commit secrets or credentials
 *.key
 *.pem
