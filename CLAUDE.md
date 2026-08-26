@@ -1,5 +1,9 @@
 # CC-Connect Development Guide
 
+## Project Purpose
+
+cc-connect is a Go-based connector for running and bridging Claude Code style agent sessions across local and external interfaces. It exists here as an upstream/forked integration dependency used by local assistant runtimes.
+
 ## Project Overview
 
 CC-Connect is a bridge that connects AI coding agents (Claude Code, Codex, Gemini CLI, Cursor, etc.) with messaging platforms (Feishu/Lark, Telegram, Discord, Slack, DingTalk, WeChat Work, QQ, LINE). Users interact with their coding agent through their preferred messaging app.
